@@ -8,9 +8,9 @@
 (install-packages-pack/install-packs '(multiple-cursors
                                        move-text
                                        git-gutter
-                                       projectile
                                        s
                                        dash
+                                       projectqile
                                        ace-jump-mode
                                        buffer-move
                                        iy-go-to-char
