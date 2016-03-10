@@ -4,73 +4,73 @@
 
 ;;; Code:
 
-(require 'install-packages-pack)
-(install-packages-pack/install-packs '(multiple-cursors
-                                       move-text
-                                       git-gutter
-                                       s
-                                       dash
-                                       projectile
-                                       ace-jump-mode
-                                       buffer-move
-                                       iy-go-to-char
-                                       popwin
-                                       dockerfile-mode
-                                       markdown-toc
-                                       company
-                                       ht
-                                       nix-mode
-                                       iedit
-                                       switch-window))
+(use-package nix-mode)
+(use-package move-text)
+(use-package dockerfile-mode)
 
-(require 'switch-window)
+(use-package projectile
+  :config
+  (custom-set-variables '(projectile-completion-system 'helm))
+  (projectile-global-mode))
 
-(custom-set-variables
- '(switch-window-shortcut-style 'qwerty))
+(use-package dash-functional)
 
-(require 'iedit)
-(require 'markdown-toc)
-(require 'multiple-cursors)
-(require 'git-gutter)
-(require 'buffer-move)
-(require 'company)
-(add-hook 'after-init-hook 'global-company-mode)
+(use-package tramp)
 
-;; Extend the default company mode mapping to the one
-(add-hook 'company-mode-hook (lambda ()
-                               (interactive)
-                               (define-key company-active-map (kbd "C-h") 'delete-backward-char)
-                               (define-key company-active-map (kbd "M-?") 'company-show-doc-buffer)
-                               (define-key company-active-map (kbd "C-n") 'company-select-next)
-                               (define-key company-active-map (kbd "C-p") 'company-select-previous)
-                               (define-key company-active-map (kbd "C-/") 'company-complete)))
+(defun buffer-pack/tramp-protocols ()
+  "Filter the protocol methods from the tramp methods."
+  (mapcar #'car tramp-methods))
 
-(require 'projectile)
-(projectile-global-mode)
+(defun buffer-pack/tramp-method-for-protocol (protocol)
+  "Ddtail PROTOCOL method for tramp."
+  (-filter (-compose (-partial #'string= protocol) #'car) tramp-methods))
 
-;; Ace jump mode
-(require 'ace-jump-mode)
+(use-package markdown-mode
+  :config (add-hook 'markdown-mode-hook
+                    (lambda ()
+                      (require 'whitespace)
+                      (whitespace-turn-on)
+                      (custom-set-variables '(whitespace-line-column 80)))))
 
-;; go to char
-(require 'iy-go-to-char)
+(use-package iedit)
+(use-package markdown-toc)
+(use-package multiple-cursors)
+(use-package git-gutter)
+(use-package buffer-move)
 
+(use-package company
+  :config (progn
+            (add-hook 'after-init-hook 'global-company-mode)
+            ;; Extend the default company mode mapping to the one
+            (add-hook 'company-mode-hook (lambda ()
+                                           (interactive)
+                                           (define-key company-active-map (kbd "C-h") 'delete-backward-char)
+                                           (define-key company-active-map (kbd "M-?") 'company-show-doc-buffer)
+                                           (define-key company-active-map (kbd "C-n") 'company-select-next)
+                                           (define-key company-active-map (kbd "C-p") 'company-select-previous)
+                                           (define-key company-active-map (kbd "M-/") 'company-complete)))))
+
+(use-package markdown-mode
+  :config (add-to-list 'auto-mode-alist '("\\.txt$" . markdown-mode)))
+
+(use-package ace-window
+  :config
+  (custom-set-variables '(aw-keys '(?a ?s ?d ?f ?j ?k ?l))
+                        '(aw-background 'grey-out-the-back-during-selection)
+                        '(avy-keys '(?a ?s ?d ?e ?f ?g ?h ?j ?k ?l ?v ?m ?r ?u))))
+
+(use-package iy-go-to-char)
 ;; use popwin to master the popup buffer and C-g to stop them
-(require 'popwin)
-(popwin-mode 1)
+(use-package popwin
+  :config (popwin-mode 1))
 
-;; (require 'dired)
-;; (add-hook 'dired-mode-hook
-;;           (define-key dired-mode-map (kbd "q") (lambda () (interactive) (quit-window t))))
+(use-package s)
+(use-package etags)
 
-(require 's)
-
-(require 'etags)
-
-(require 'whitespace)
-(setq whitespace-line-column 80);; increase this if not happy about 80 columns
-
-;; activate clipboard
-(setq x-select-enable-clipboard t)
+(use-package whitespace
+  :config
+  ;; increase this if not happy about 80 columns
+  (custom-set-variables '(whitespace-line-column 80)))
 
 (defun rotate-windows ()
   "Rotate your windows."
@@ -111,13 +111,6 @@
         (linum-mode -1)
         (when git-gutter-activated-p (git-gutter-mode 1))))))
 
-;; Auto refresh buffers (not active by default)
-;;(global-auto-revert-mode 1)
-
-;; Also auto refresh dired, but be quiet about it
-(setq global-auto-revert-non-file-buffers t)
-(setq auto-revert-verbose nil)
-
 (add-hook 'ido-setup-hook
           (lambda () ;; ~ to go straight home, // to go in /
             (define-key ido-file-completion-map (kbd "~") (lambda ()
@@ -126,20 +119,30 @@
                                                                 (insert "~/")
                                                               (call-interactively 'self-insert-command))))))
 
-(setq
- inhibit-splash-screen t ;; Do not show a splash screen.
- echo-keystrokes 0.1    ;; Show incomplete commands while typing them.
- visible-bell t         ;; Flash the screen on errors.
- column-number-mode t)  ;; column number in the modeline
+;; activate clipboard
+(custom-set-variables '(x-select-enable-clipboard t)
+                      '(x-select-enable-primary t)
+                      ;; '(x-stretch-cursor t)
+                      ;; '(x-select-request-type '(UTF8_STRING COMPOUND_TEXT TEXT STRING))
+                      ;; Auto refresh buffers (not active by default)
+                      ;;(global-auto-revert-mode 1)
+                      ;; Also auto refresh dired, but be quiet about it
+                      '(global-auto-revert-non-file-buffers t)
+                      '(auto-revert-verbose nil)
+                      '(inhibit-splash-screen t);; Do not show a splash screen.
+                      '(echo-keystrokes 0.1)    ;; Show incomplete commands while typing them.
+                      '(visible-bell t)         ;; Flash the screen on errors.
+                      '(column-number-mode t)   ;; column number in the modeline
+                      )
 
 (defalias 'yes-or-no-p 'y-or-n-p) ;; "y" resp. "n" instead of "yes" resp. "no".
 
 ;; -----------------------------
 
-(require 'ht) ;; ease hash-table manipulation
-(require 'dash)
+(use-package dash
+  :config (dash-enable-font-lock))
 
-(eval-after-load "dash" '(dash-enable-font-lock))
+(use-package ht)
 
 (defvar BUFFER-PACK/LAST-BUFFER (ht-create)
   "Last buffer visited when switching to term.")
@@ -194,9 +197,28 @@ Otherwise, we go inside a terminal."
   (interactive)
   (upcase-word -1))
 
+(defun buffer-pack/call-fn-number-at-point (update-fn)
+  "Call UPDATE-FN on number at point."
+  (let ((number (number-at-point))
+        (point (point)))
+    (when number
+      (forward-word)
+      (search-backward (number-to-string number))
+      (replace-match (number-to-string (funcall update-fn number)))
+      (goto-char point))))
+
+(defun buffer-pack/increment-number-at-point ()
+  "Increment number at point."
+  (interactive)
+  (buffer-pack/call-fn-number-at-point #'1+))
+
+(defun buffer-pack/decrement-number-at-point ()
+  "Decrement number at point."
+  (interactive)
+  (buffer-pack/call-fn-number-at-point #'1-))
+
 (defvar buffer-pack-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c j") 'ace-jump-mode)
     (define-key map (kbd "C-c g f") 'iy-go-to-char)
     (define-key map (kbd "C-c g b") 'iy-go-to-char-backward)
 
@@ -232,10 +254,6 @@ Otherwise, we go inside a terminal."
     ;; Align your code in a pretty way.
     (define-key map (kbd "C-x \\") 'align-regexp)
 
-    ;; Window switching.
-    (define-key map (kbd "C-x O") (lambda () (interactive) (other-window -1)))  ;; back one
-    (define-key map (kbd "C-x C-o") (lambda () (interactive) (other-window 2))) ;; forward two
-
     ;;window and buffer movement
     (define-key map (kbd "C-c w r") 'rotate-windows)
     (define-key map (kbd "C-c w p") 'buf-move-up)
@@ -246,7 +264,11 @@ Otherwise, we go inside a terminal."
     (define-key map (kbd "C-c w ,") 'enlarge-window-horizontally)
     (define-key map (kbd "C-c w /") (lambda () (interactive) (enlarge-window -1)))
     (define-key map (kbd "C-c w '") (lambda () (interactive) (enlarge-window 1)))
-    (define-key map (kbd "C-c w s") 'switch-window)
+    ;; jump to a window...
+    (define-key map (kbd "C-x C-o") 'ace-window)
+    (define-key map (kbd "C-x o")   'ace-window)
+    ;; or a word
+    (define-key map (kbd "C-c j") 'avy-goto-word-1)
 
     (define-key map (kbd "C-c b u") 'browse-url-at-point)
     (define-key map (kbd "C-c b U") 'browse-url)
@@ -256,6 +278,9 @@ Otherwise, we go inside a terminal."
     (define-key map (kbd "C-M-SPC") 'er/expand-region)
     (define-key map (kbd "C-c b ;") 'iedit-mode)
 
+    (define-key map (kbd "C-c b +") 'buffer-pack/increment-number-at-point)
+    (define-key map (kbd "C-c b -") 'buffer-pack/decrement-number-at-point)
+
     map)
   "Keymap for Buffer-pack mode.")
 
@@ -263,7 +288,7 @@ Otherwise, we go inside a terminal."
   "Minor mode to consolidate Emacs' buffer-pack extensions.
 
 \\{buffer-pack-mode-map}"
-  :lighter " BP"
+  :lighter " β"
   :keymap buffer-pack-mode-map)
 
 (define-globalized-minor-mode global-buffer-pack-mode buffer-pack-mode buffer-pack-on)
@@ -274,14 +299,74 @@ Otherwise, we go inside a terminal."
 
 (global-buffer-pack-mode)
 
-;; Override some default mapping to the minibuffer
-;; (add-hook 'minibuffer-setup-hook (lambda ()
-;;                                    (define-key minibuffer-local-map (kbd "C-h") 'backward-kill-char)
-;;                                    (define-key minibuffer-local-map (kbd "C-M-h") 'backward-kill-word)))
-
 (global-prettify-symbols-mode 1)
 
 (setq load-prefer-newer t)
+
+;; fix typos
+
+(defun dcaps-to-scaps ()
+  "Convert word in DOuble CApitals to Single Capitals."
+  (interactive)
+  (and (= ?w (char-syntax (char-before)))
+       (save-excursion
+         (and (if (called-interactively-p)
+                  (skip-syntax-backward "w")
+                (= -3 (skip-syntax-backward "w")))
+              (let (case-fold-search)
+                (looking-at "\\b[[:upper:]]\\{2\\}[[:lower:]]"))
+              (capitalize-word 1)))))
+
+(define-minor-mode dubcaps-mode
+  "Toggle `dubcaps-mode'.  Converts words in DOuble CApitals to
+Single Capitals as you type."
+  :init-value nil
+  :lighter " ψ"
+  (if dubcaps-mode
+      (add-hook 'post-self-insert-hook #'dcaps-to-scaps nil 'local)
+    (remove-hook 'post-self-insert-hook #'dcaps-to-scaps 'local)))
+
+(add-hook 'text-mode-hook #'dubcaps-mode)
+(add-hook 'text-mode-hook #'smartscan-mode)
+
+;; fix typos
+
+(define-key ctl-x-map "\C-i" #'endless/ispell-word-then-abbrev)
+
+(defun endless/ispell-word-then-abbrev (p)
+  "Call `ispell-word', then create an abbrev for it.
+With prefix P, create local abbrev.
+Otherwise it will be global."
+  (interactive "P")
+  (let ((bef (downcase (or (thing-at-point 'word)
+                           "")))
+        aft)
+    (call-interactively 'ispell-word)
+    (setq aft (downcase
+               (or (thing-at-point 'word) "")))
+    (unless (or (string= aft bef)
+                (string= aft "")
+                (string= bef ""))
+      (message "\"%s\" now expands to \"%s\" %sally"
+               bef aft (if p "loc" "glob"))
+      (define-abbrev
+        (if p local-abbrev-table global-abbrev-table)
+        bef aft))))
+
+(setq save-abbrevs t)
+(setq-default abbrev-mode t)
+
+(use-package isearch-mode
+  :config
+  (add-hook 'isearch-mode-hook
+            (lambda ()
+              (define-key isearch-mode-map (char-to-string help-char) nil) ;; unbind C-h
+              (define-key isearch-mode-map (kbd "C-h") 'isearch-delete-char)
+              (define-key isearch-mode-map (kbd "C-d") 'delete-forward-char)
+              (define-key isearch-mode-map (kbd "M-?") isearch-help-map)
+
+              (define-key minibuffer-local-isearch-map (kbd "C-h") 'isearch-delete-char)
+              (define-key minibuffer-local-isearch-map (kbd "C-d") 'delete-forward-char))))
 
 (provide 'buffer-pack)
 ;;; buffer-pack.el ends here
