@@ -223,7 +223,7 @@ Otherwise, we go inside a terminal."
     (define-key map (kbd "C-v") (lambda () (interactive) (forward-line 10)))
     (define-key map (kbd "M-v") (lambda () (interactive) (forward-line -10)))
 
-    (define-key map (kbd "C-c r r") (lambda () (interactive) (revert-buffer nil t)))
+    ;; (define-key map (kbd "C-c r r") (lambda () (interactive) (revert-buffer nil t)))
 
     ;;scroll other window
     (define-key map (kbd "C-M-]") 'scroll-other-window)
