@@ -3,7 +3,7 @@
 ;;; Commentary:
 
 ;;; Code:
-
+(require 'use-package)
 (use-package nix-mode)
 (use-package move-text)
 (use-package dockerfile-mode)
